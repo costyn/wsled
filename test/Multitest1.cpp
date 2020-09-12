@@ -41,11 +41,11 @@ CRGB strip7[LEGWING_LEN];
 CRGB strip8[STRIP8_LEN];
 CRGB strip910[STRIP910_LEN];
 
+void fillStrip( uint8_t stripId, CHSV chsv );
 
 void setup() {
     FastLED.addLeds<NEOPIXEL, 14>(strip12, STRIP12_LEN);
     FastLED.addLeds<NEOPIXEL, 2>(strip3, STRIP3_LEN);
-
     FastLED.addLeds<NEOPIXEL, 6>(strip4, LEGWING_LEN);
     FastLED.addLeds<NEOPIXEL, 20>(strip5, LEGWING_LEN);
     FastLED.addLeds<NEOPIXEL, 21>(strip6, LEGWING_LEN);
@@ -54,18 +54,69 @@ void setup() {
     FastLED.addLeds<NEOPIXEL, 7>(strip8, STRIP8_LEN);
     FastLED.addLeds<NEOPIXEL, 8>(strip910, STRIP910_LEN);
 
-    FastLED.setBrightness(150);
+    FastLED.setBrightness(100);
     // Serial.begin(115200);
 }
 
-void loop() {
+void sweepLeftRight() {
+    for( int i = 0 ; i < 10 ; i++ ) {
+        FastLED.clear();
+        fillStrip( i, CHSV(i*15,255,255));
+        FastLED.show();
+        delay(50);
+    }
+}
+
+void fillStrip( uint8_t stripId, CHSV chsv ){
+    switch(stripId)
+    {
+        case 1:
+        fill_solid(strip12, STRIP1_LEN, chsv);
+        break;
+
+        case 2:
+        fill_solid(strip12 + STRIP2_START, STRIP2_LEN, chsv);
+        break;
+
+        case 3:
+        fill_solid(strip3, STRIP3_LEN, chsv);
+        break;
+
+        case 4:
+        fill_solid(strip4, LEGWING_LEN, chsv);
+        break;
+
+        case 5:
+        fill_solid(strip5, LEGWING_LEN, chsv);
+        break;
+
+        case 6:
+        fill_solid(strip6, LEGWING_LEN, chsv);
+        break;
+
+        case 7:
+        fill_solid(strip7, LEGWING_LEN, chsv);
+        break;
+
+        case 8:
+        fill_solid(strip8, LEGWING_LEN, chsv);
+        break;
+
+        case 9:
+        fill_solid(strip910, STRIP9_LEN, chsv);
+        break;
+
+        case 10:
+        fill_solid(strip910, STRIP10_LEN, chsv);
+        break;
+    }
+}
+
+void bouncers() {
     int pos1 = beatsin8(50,STRIP1_START,STRIP1_END);
     int pos2 = beatsin8(50,STRIP2_START,STRIP2_END);
     int pos3 = beatsin8(50,STRIP3_START,STRIP3_END);
     int pos_leg = beatsin8(50,0,LEGWING_LEN-1);
-    // Serial.print(pos1);
-    // Serial.print("   ");
-    // Serial.println(pos3);
     strip12[pos1]   = CHSV(beatsin8(10)+0,255,255);
     strip12[pos2]   = CHSV(beatsin8(10)+30,255,255);
     strip3[pos3]    = CHSV(beatsin8(10)+60,255,255);
@@ -82,3 +133,8 @@ void loop() {
     FastLED.clear();
     delay(10);
 }
+
+void loop() {
+    sweepLeftRight();
+}
+
