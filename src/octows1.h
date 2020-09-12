@@ -5,6 +5,8 @@
 #include <FastLED.h>
 #include <TaskScheduler.h>
 
+// #define AUTOADVANCE
+
 #define NUM_LEDS_PER_STRIP 90
 #define NUM_STRIPS 8
 #define NUM_LEDS NUM_STRIPS * NUM_LEDS_PER_STRIP
@@ -12,7 +14,7 @@
 
 // Nr 1
 #define STRIP1_LEN 42
-#define STRIP1_START NUM_LEDS_PER_STRIP
+#define STRIP1_START NUM_LEDS_PER_STRIP * 1
 #define STRIP1_END STRIP1_START + STRIP1_LEN
 
 // Nr 2
@@ -99,18 +101,56 @@ uint16_t stripLen[] = {
     STRIP10_LEN
 };
 
-int ledMode = 2 ;
+int ledMode = 5 ;
 
 const char *routines[] = {
   "cylon",
-  "strobeParts",
-  "strobeAll",
-  "rainbow",
   "fadeGlitter",
   "discoGlitter",
-  "fire2012",
-  "fire2012x4",
-  "fire2012all",
   "noiselava",
-  "noiseparty"
+  "noiseparty",
+  "wipe"
 };
+
+#define NUMROUTINES (sizeof(routines)/sizeof(char *)) //array size
+
+// Prototype Methods
+void strobeAll();
+void strobeParts();
+void strobePart(uint16_t startP, uint16_t numLeds, uint16_t delayTime );
+void cylon();
+void solid_red();
+void fadeGlitter();
+void identify();
+void rainbow();
+void black() ;
+void wipe() ;
+void discoGlitter();
+void addGlitter( fract8 chanceOfGlitter);
+void fadeSome(uint8_t fade_all_speed, uint16_t startPos, uint16_t endPos);
+void fadeAll(uint8_t fade_all_speed) ;
+void cylon1(uint16_t bpm, uint16_t startPos, uint16_t endPos, uint8_t hue);
+void Fire2012() ;
+void Fire2012x4() ;
+void Fire2012all() ;
+void fillnoise8(uint8_t currentPalette, uint8_t speed, uint8_t scale, boolean colorLoop ) ;
+void fillnoise8lava() ;
+void fillnoise8party() ;
+void monitorJoystick() ;
+void nextPattern() ;
+void prevPattern() ;
+void setTaskCallback() ;
+void showPattern() ;
+
+
+#define DEBUG
+
+#ifdef DEBUG
+#define DEBUG_PRINT(x)       Serial.print (x)
+#define DEBUG_PRINTDEC(x)    Serial.print (x, DEC)
+#define DEBUG_PRINTLN(x)     Serial.println (x)
+#else
+#define DEBUG_PRINT(x)
+#define DEBUG_PRINTDEC(x)
+#define DEBUG_PRINTLN(x)
+#endif
