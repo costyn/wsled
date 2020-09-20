@@ -4,13 +4,19 @@
 #include <OctoWS2811.h>
 #include <FastLED.h>
 #include <TaskScheduler.h>
+#include <JC_Button.h>
 
-// #define AUTOADVANCE
+
 
 #define NUM_LEDS_PER_STRIP 90
 #define NUM_STRIPS 8
 #define NUM_LEDS NUM_STRIPS * NUM_LEDS_PER_STRIP
 
+// To Levelshifter
+// 2, 14, 7, 8, 6, 20, 21, 5
+
+// On breakout: 
+// 0, 1, 23, 22, 19, 18, 17
 
 // Nr 1
 #define STRIP1_LEN 42
@@ -101,15 +107,20 @@ uint16_t stripLen[] = {
     STRIP10_LEN
 };
 
-int ledMode = 5 ;
+
 
 const char *routines[] = {
-  "cylon",
-  "fadeGlitter",
-  "discoGlitter",
-  "noiselava",
-  "noiseparty",
-  "wipe"
+    "cylon",
+    "cylonBig",
+    "fadeGlitter",
+    "discoGlitter",
+    "noiselava",
+    "noiseparty",
+    "wipe",
+    "rainbow",
+    "strobeAll",
+    "fire2012",
+    "redDots2"
 };
 
 #define NUMROUTINES (sizeof(routines)/sizeof(char *)) //array size
@@ -125,6 +136,7 @@ void identify();
 void rainbow();
 void black() ;
 void wipe() ;
+void redDots2();
 void discoGlitter();
 void addGlitter( fract8 chanceOfGlitter);
 void fadeSome(uint8_t fade_all_speed, uint16_t startPos, uint16_t endPos);
@@ -141,7 +153,7 @@ void nextPattern() ;
 void prevPattern() ;
 void setTaskCallback() ;
 void showPattern() ;
-
+void checkButtonPress();
 
 #define DEBUG
 
@@ -154,3 +166,10 @@ void showPattern() ;
 #define DEBUG_PRINTDEC(x)
 #define DEBUG_PRINTLN(x)
 #endif
+
+#define BUTTON_PIN 23
+#define TASK_CHECK_BUTTON_PRESS_INTERVAL    100   // in milliseconds
+
+#define POT_BRIGHTNESS_PIN 18
+#define POT_SPEED_PIN 19
+#define POT_HIGH_PIN 22
