@@ -5,7 +5,15 @@
 // ************************************************************************
 
 #define DEFAULT_BRIGHTNESS 80
-#define DEFAULT_LEDMODE 10
+#define DEFAULT_LEDMODE 12
+
+// ************************************************************************
+//                              DUMMY FUNCTIONS
+// ************************************************************************
+
+void checkPots();
+void setTaskCallback();
+void autoAdvanceLedMode();
 
 // ************************************************************************
 //                              GLOBAL VARIABLES
@@ -13,23 +21,15 @@
 
 CRGB leds[NUM_LEDS];
 int _ledMode = DEFAULT_LEDMODE;
-void setTaskCallback();
 Scheduler runner;
 Task taskShowPattern(10, TASK_FOREVER, &cylon);
 Task taskCheckButtonPress(TASK_CHECK_BUTTON_PRESS_INTERVAL, TASK_FOREVER, &checkButtonPress);
 
-void autoAdvanceLedMode();
 Task taskAutoAdvanceLedMode(15 * TASK_SECOND, TASK_FOREVER, &autoAdvanceLedMode);
 
 Button nextPatternButton(BUTTON_PIN);
 
 uint8_t _speed;
-
-// ************************************************************************
-//                              DUMMY FUNCTIONS
-// ************************************************************************
-
-void checkPots();
 
 // ************************************************************************
 //                              SETUP
@@ -206,19 +206,24 @@ void addGlitter(fract8 chanceOfGlitter)
 
 void fillnoise8lava()
 {
-  fillnoise8(0, 1, 30, 1); // pallette, speed, scale, loop
+  fillnoise8(0, map8(_speed,0,24), 20, 1); // pallette, speed, scale, loop
 }
 
 void fillnoise8party()
 {
-  fillnoise8(1, 1, 30, 1); // pallette, speed, scale, loop
+  fillnoise8(1, map8(_speed,0,24), 20, 1); // pallette, speed, scale, loop
+}
+
+void fillnoise8rainbow()
+{
+  fillnoise8(2, map8(_speed,0,24), 10, 1); // pallette, speed, scale, loop
 }
 
 void fillnoise8(uint8_t currentPalette, uint8_t speed, uint8_t scale, boolean colorLoop)
 {
   static uint16_t noise[NUM_LEDS];
 
-  const CRGBPalette16 palettes[] = {LavaColors_p, PartyColors_p, OceanColors_p};
+  const CRGBPalette16 palettes[] = {LavaColors_p, PartyColors_p, RainbowColors_p};
 
   static uint16_t x = random16();
   static uint16_t y = random16();
@@ -350,16 +355,20 @@ void Fire2012()
 
 void rainbow()
 {
-  static uint8_t hue = 0;
-  for (int i = 0; i < 10; i++)
-  {
-    for (int j = 0; j < stripLen[i]; j++)
-    {
-      leds[stripStart[i] + j] = CHSV((32 * i) + hue + j, 192, 255);
-    }
-  }
-
-  hue++;
+  static uint8_t startindex = 0;
+  uint8_t incindex = 2;
+  // fill_palette(leds, NUM_LEDS, startindex, incindex, RainbowColors_p, 255, LINEARBLEND);
+  fill_palette(leds + STRIP1_START, STRIP1_LEN, startindex, incindex, RainbowColors_p, 255, LINEARBLEND);
+  fill_palette(leds + STRIP2_START, STRIP2_LEN, startindex + STRIP1_LEN, incindex, RainbowColors_p, 255, LINEARBLEND);
+  fill_palette(leds + STRIP3_START, STRIP3_LEN, startindex + STRIP2_LEN, incindex, RainbowColors_p, 255, LINEARBLEND);
+  fill_palette(leds + STRIP4_START, STRIP4_LEN, startindex + STRIP3_LEN, incindex, RainbowColors_p, 255, LINEARBLEND);
+  fill_palette(leds + STRIP5_START, STRIP5_LEN, startindex + STRIP4_LEN, incindex, RainbowColors_p, 255, LINEARBLEND);
+  fill_palette(leds + STRIP6_START, STRIP6_LEN, startindex + STRIP5_LEN, incindex, RainbowColors_p, 255, LINEARBLEND);
+  fill_palette(leds + STRIP7_START, STRIP7_LEN, startindex + STRIP6_LEN, incindex, RainbowColors_p, 255, LINEARBLEND);
+  fill_palette(leds + STRIP8_START, STRIP8_LEN, startindex + STRIP7_LEN, incindex, RainbowColors_p, 255, LINEARBLEND);
+  fill_palette(leds + STRIP9_START, STRIP9_LEN, startindex + STRIP8_LEN, incindex, RainbowColors_p, 255, LINEARBLEND);
+  fill_palette(leds + STRIP10_START, STRIP10_LEN, startindex + STRIP9_LEN, incindex, RainbowColors_p, 255, LINEARBLEND);
+  startindex -= map8(_speed,0,12);
   LEDS.show();
 }
 
@@ -400,52 +409,183 @@ void longPressOk()
 }
 
 void radiate() {
-    if( taskShowPattern.getRunCounter() % 2 == 0 ) {
-      fill_solid(leds + stripStart[0], stripLen[0], CRGB::White);
-      fill_solid(leds + stripStart[1], stripLen[1], CRGB::Red);
-      fill_solid(leds + stripStart[2], stripLen[2], CRGB::White);
-    } else {
-      fill_solid(leds + stripStart[0], stripLen[0], CRGB::Red);
-      fill_solid(leds + stripStart[1], stripLen[1], CRGB::White);
-      fill_solid(leds + stripStart[2], stripLen[2], CRGB::Red);
-    }
-    LEDS.show();
+  // DEBUG_PRINT(taskShowPattern.getRunCounter());
+  // DEBUG_PRINT("   ");
+  // DEBUG_PRINTLN(mod(taskShowPattern.getRunCounter(),1));
+  static uint8_t stripNr = 0;
+  fill_solid(leds, NUM_LEDS, CRGB::Black);
+  
+  if( stripNr == 2 ) {
+    fill_solid(leds + stripStart[0], stripLen[0], CRGB::Red);
+    fill_solid(leds + stripStart[9], stripLen[9], CRGB::Red);
+  }
+  if( stripNr == 1 ) {
+    fill_solid(leds + stripStart[1], stripLen[1], CRGB::Red);
+    fill_solid(leds + stripStart[8], stripLen[8], CRGB::Red);
+  }
+  if( stripNr == 0 ) {
+    fill_solid(leds + stripStart[2], stripLen[2], CRGB::Red);
+    fill_solid(leds + stripStart[7], stripLen[7], CRGB::Red);
+  }
+
+  stripNr++ ;
+  if( stripNr == 3 ) {
+    stripNr = 0;
+  }
+  LEDS.show();
+  // fadeAll(253);
 }
 
 void radiate2()
 {
-  uint8_t numTwirlers = 4;
-  uint8_t pos = 0;
-  uint8_t speedCorrection = 0;
-  uint8_t clockwiseFirst = lerp8by8(0, NUM_LEDS, beat8(20));
-  const CRGB clockwiseColor = CRGB::White;
-  const CRGB antiClockwiseColor = CRGB::Red;
-  for (uint8_t i = 0; i < numTwirlers; i++)
-  {
-    if ((i % 2) == 0)
-    {
-      pos = (int)(round(clockwiseFirst + round(NUM_LEDS / numTwirlers) * i)) % NUM_LEDS;
-      if (leds[pos])
-      { // FALSE if currently BLACK - don't blend with black
-        leds[pos] = blend(leds[pos], clockwiseColor, 128);
-      }
-      else
-      {
-        leds[pos] = clockwiseColor;
-      }
-    }
-    else
-    {
-      pos = (int)(round(clockwiseFirst + round(NUM_LEDS / numTwirlers) * i)) % NUM_LEDS;
-      if (leds[pos])
-      { // FALSE if currently BLACK - don't blend with black
-        leds[pos] = blend(leds[pos], antiClockwiseColor, 128);
-      }
-      else
-      {
-        leds[pos] = antiClockwiseColor;
-      }
-    }
+  // fill_solid(leds, NUM_LEDS, CRGB::Black);
+
+  // for (int i = taskShowPattern.getRunCounter() % 9; i < NUM_LEDS; i = i + 2)
+  // {
+  //   leds[i] = CRGB::Red;
+  // }
+  // for (int i = taskShowPattern.getRunCounter() % 9; i < NUM_LEDS; i = i + 4)
+  // {
+  //   leds[i] = CRGB::White;
+  // }
+
+
+  for( int i  = NUM_LEDS ; i > 0; i-- ) {
+    leds[i] = leds[i-1] ;
+  }
+
+  if( taskShowPattern.getRunCounter() % 10 == 0 ) {
+    leds[0] = CRGB::Red;
+  } else {
+    leds[0] = CRGB::Black;
+  }
+
+  // fadeAll(map8(_speed, 240, 250));
+  LEDS.show();
+
+
+
+
+  // for (uint8_t i = 0; i < numTwirlers; i++)
+  // {
+  //   if ((i % 2) == 0)
+  //   {
+  //     // pos = (int)(round(clockwiseFirst + round(NUM_LEDS / numTwirlers) * i)) % NUM_LEDS;
+  //     if (leds[pos])
+  //     { 
+  //       // FALSE if currently BLACK - don't blend with black
+  //       leds[pos] = blend(leds[pos], clockwiseColor, 128);
+  //     }
+  //     else
+  //     {
+  //       leds[pos] = clockwiseColor;
+  //     }
+  //   }
+  //   else
+  //   {
+  //     pos = (int)(round(clockwiseFirst + round(NUM_LEDS / numTwirlers) * i)) % NUM_LEDS;
+  //     if (leds[pos])
+  //     { // FALSE if currently BLACK - don't blend with black
+  //       leds[pos] = blend(leds[pos], antiClockwiseColor, 128);
+  //     }
+  //     else
+  //     {
+  //       leds[pos] = antiClockwiseColor;
+  //     }
+  //   }
+  // }
+}
+
+void FillLEDsFromPaletteColors() {
+  static uint8_t startIndex = 0;
+  startIndex = startIndex + 1; /* motion speed */
+  FillLEDsFromPaletteColors( startIndex);
+  // DEBUG_PRINTLN(startIndex);
+  LEDS.show();
+}
+
+void FillLEDsFromPaletteColors( uint8_t colorIndex)
+{
+  uint8_t brightness = 255;
+  CRGBPalette16 currentPalette( RainbowStripeColors_p );
+  
+  for( int i = 0; i < NUM_LEDS; i++) {
+    leds[i] = ColorFromPalette( currentPalette, colorIndex + sin8(i*16), brightness);
+    colorIndex += 3;
+  }
+
+}
+
+void paletteBeat()
+{
+  PeriodicallyChooseNewColorPalettes(); // currently does nothing
+  MixBeatPalette(); // mix up the new 'beat palette' to draw with
+  DrawOneFrameUsingBeatPalette(); // draw a simple animation using the 'beat palette'
+  LEDS.show();
+}
+
+const CRGBPalette16 palettes[] = { 
+  RainbowColors_p,
+  RainbowStripeColors_p,
+  HeatColors_p,
+  LavaColors_p,
+  PartyColors_p,
+} ;
+
+CRGBPalette16 gCurrentPaletteA( CRGB::Black);
+CRGBPalette16 gCurrentPaletteB( CRGB::Black);
+
+CRGBPalette16 gTargetPaletteA( palettes[0]);
+// CRGBPalette16 gTargetPaletteB( CRGB::Red );
+CRGBPalette16 gTargetPaletteB( palettes[1]);
+
+CRGBPalette16 gBeatPalette;
+
+void MixBeatPalette()
+{
+  // uint8_t paletteBeatsPerMinute = map8(_speed, 30, 120);
+  uint8_t paletteBeatsPerMinute = 60;
+
+  uint8_t beat = beat8( paletteBeatsPerMinute); // repeats from 0..255 
+
+  // 'cubicwave8' spends more time at each end than sin8, and less time
+  // in the middle.  Try others: triwave8, quadwave8, sin8, cubicwave8
+  uint8_t mixer = cubicwave8( beat);
+
+  // Mix a new palette, gBeatPalette, with a varying amount of contribution
+  // from gCurrentPaletteA and gCurrentPaletteB, depending on 'mixer'.
+  // The 'beat palette' is then used to draw onto the LEDs.
+  uint8_t palettesize = sizeof( gBeatPalette) / sizeof(gBeatPalette[0]); // = 16
+  blend( gCurrentPaletteA, gCurrentPaletteB, gBeatPalette, palettesize, mixer);
+}
+
+
+// Sample draw function to draw some pixels using the colors in gBeatPalette
+void DrawOneFrameUsingBeatPalette()
+{
+  static uint8_t startindex = 0;
+  uint8_t incindex = 1;
+  fill_palette(leds, NUM_LEDS, startindex, incindex, gBeatPalette, 255, LINEARBLEND);
+  // fill_palette(leds, NUM_LEDS, startindex, incindex, RainbowStripeColors_p, 255, LINEARBLEND);
+  startindex -= map8(_speed,0,4);
+}
+
+
+// If you wanted to change the two palettes from 'rainbow' and 'red'
+// to something else, here's where you'd do it.
+void PeriodicallyChooseNewColorPalettes()
+{
+  EVERY_N_SECONDS(11) {
+    gTargetPaletteA = palettes[random8(5)];
+  }
+
+  EVERY_N_SECONDS(17) {
+    gTargetPaletteB = palettes[random8(5)];
+  }
+  
+  EVERY_N_MILLISECONDS(20) {
+    nblendPaletteTowardPalette( gCurrentPaletteA, gTargetPaletteA);
+    nblendPaletteTowardPalette( gCurrentPaletteB, gTargetPaletteB);
   }
 }
 
@@ -478,7 +618,7 @@ void setTaskCallback()
   else if (strcmp(routines[_ledMode], "rainbow") == 0)
   {
     taskShowPattern.setCallback(&rainbow);
-    taskShowPattern.setInterval(10);
+    taskShowPattern.setInterval(20);
   }
   else if (strcmp(routines[_ledMode], "fadeGlitter") == 0)
   {
@@ -488,7 +628,7 @@ void setTaskCallback()
   else if (strcmp(routines[_ledMode], "discoGlitter") == 0)
   {
     taskShowPattern.setCallback(&discoGlitter);
-    taskShowPattern.setInterval(10);
+    taskShowPattern.setInterval(20);
   }
   else if (strcmp(routines[_ledMode], "wipe") == 0)
   {
@@ -515,10 +655,20 @@ void setTaskCallback()
     taskShowPattern.setCallback(&fillnoise8party);
     taskShowPattern.setInterval(10);
   }
+  else if (strcmp(routines[_ledMode], "noiserainbow") == 0)
+  {
+    taskShowPattern.setCallback(&fillnoise8rainbow);
+    taskShowPattern.setInterval(10);
+  }
   else if (strcmp(routines[_ledMode], "radiate") == 0)
   {
     taskShowPattern.setCallback(&radiate);
-    taskShowPattern.setInterval(50);
+    taskShowPattern.setInterval(100);
+  }
+  else if (strcmp(routines[_ledMode], "palettebeat") == 0)
+  {
+    taskShowPattern.setCallback(&paletteBeat);
+    taskShowPattern.setInterval(10);
   }
 }
 
@@ -547,7 +697,7 @@ void autoAdvanceLedMode()
   nextLedMode();
 }
 
-#define LONGPRESS 500
+#define LONGPRESS 1000
 
 void checkButtonPress()
 {
@@ -555,18 +705,22 @@ void checkButtonPress()
 
   if (nextPatternButton.pressedFor(LONGPRESS))
   {
+    DEBUG_PRINTLN("LONGPRESS detected");
     if (taskAutoAdvanceLedMode.isEnabled())
     {
       taskAutoAdvanceLedMode.disable();
+      DEBUG_PRINTLN("autoAdvance: DISABLED");
     }
     else
     {
       taskAutoAdvanceLedMode.enable();
+      DEBUG_PRINTLN("autoAdvance: ENABLED");
     }
     taskShowPattern.setCallback(&longPressOk);
   } 
-  else if (nextPatternButton.wasPressed())
+  else if (nextPatternButton.wasReleased())
   {
+    DEBUG_PRINTLN("SHORTpress detected");
     nextLedMode();
   }
 
@@ -589,12 +743,11 @@ void checkPots()
 
   uint16_t calculatedBrightness;
 
-  if (Pot1EMA_S != Pot1Old)
-  {
+  if (Pot1EMA_S != Pot1Old) {
     Pot1Old = Pot1EMA_S;
     DEBUG_PRINT("Pot1EMA_S: ");
     DEBUG_PRINT(Pot1EMA_S);
-    calculatedBrightness = 255 - map(Pot1EMA_S, 0, 800, 3, 255);
+    calculatedBrightness = 255 - map(Pot1EMA_S, 0, 800, 0, 253);
     if (calculatedBrightness != lastBrightness)
     {
       lastBrightness = calculatedBrightness;

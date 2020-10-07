@@ -109,6 +109,8 @@ const char *routines[] = {
     "discoGlitter",
     "noiselava",
     "noiseparty",
+    "noiserainbow",
+    "palettebeat",
     "wipe",
     "rainbow",
     "strobeAll",
@@ -141,6 +143,12 @@ void Fire2012all();
 void fillnoise8(uint8_t currentPalette, uint8_t speed, uint8_t scale, boolean colorLoop);
 void fillnoise8lava();
 void fillnoise8party();
+void fillnoise8rainbow();
+void FillLEDsFromPaletteColors();
+void FillLEDsFromPaletteColors( uint8_t colorIndex);
+void PeriodicallyChooseNewColorPalettes(); // currently does nothing
+void MixBeatPalette(); // mix up the new 'beat palette' to draw with
+void DrawOneFrameUsingBeatPalette(); // draw a simple animation using the 'beat palette'
 void longPressOk();
 void radiate();
 void nextPattern();
@@ -168,3 +176,7 @@ void checkButtonPress();
 #define POT_BRIGHTNESS_PIN 18
 #define POT_SPEED_PIN 19
 #define POT_HIGH_PIN 22
+
+int mod(int x, int m) {
+  return (x % m + m) % m;
+}
