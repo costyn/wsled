@@ -176,6 +176,7 @@ void checkButtonPress();
 #define POT_BRIGHTNESS_PIN 18
 #define POT_SPEED_PIN 19
 #define POT_HIGH_PIN 22
+#define LED_INDICATOR_PIN 1
 
 int mod(int x, int m) {
   return (x % m + m) % m;

@@ -5,7 +5,7 @@
 // ************************************************************************
 
 #define DEFAULT_BRIGHTNESS 80
-#define DEFAULT_LEDMODE 12
+#define DEFAULT_LEDMODE 10
 
 // ************************************************************************
 //                              DUMMY FUNCTIONS
@@ -56,6 +56,7 @@ void setup()
   digitalWrite(POT_HIGH_PIN, HIGH); // 3v source
   pinMode(POT_BRIGHTNESS_PIN, INPUT);
   pinMode(POT_SPEED_PIN, INPUT);
+  pinMode(LED_INDICATOR_PIN, OUTPUT);    // 3v source
 
   runner.addTask(taskAutoAdvanceLedMode);
 
@@ -164,6 +165,7 @@ void fadeAll(uint8_t fade_all_speed)
   {
     leds[i].nscale8(fade_all_speed);
   }
+  // DEBUG_PRINTLN("fadeAll");
 }
 
 void strobeAll()
@@ -408,32 +410,50 @@ void longPressOk()
   setTaskCallback(); // Set pattern back to _ledMode
 }
 
+void moveOut(uint16_t bpm, uint16_t startPos, uint16_t endPos, uint8_t hue)
+{
+  leds[map(beat88(bpm * 256), 0, 65536, startPos, endPos - 1)] = CHSV(hue, 255, 255);
+  fadeSome(245, startPos, endPos);
+}
+
+
 void radiate() {
   // DEBUG_PRINT(taskShowPattern.getRunCounter());
   // DEBUG_PRINT("   ");
   // DEBUG_PRINTLN(mod(taskShowPattern.getRunCounter(),1));
   static uint8_t stripNr = 0;
-  fill_solid(leds, NUM_LEDS, CRGB::Black);
+  // fill_solid(leds, NUM_LEDS, CRGB::Black);
   
-  if( stripNr == 2 ) {
-    fill_solid(leds + stripStart[0], stripLen[0], CRGB::Red);
-    fill_solid(leds + stripStart[9], stripLen[9], CRGB::Red);
-  }
-  if( stripNr == 1 ) {
-    fill_solid(leds + stripStart[1], stripLen[1], CRGB::Red);
-    fill_solid(leds + stripStart[8], stripLen[8], CRGB::Red);
-  }
-  if( stripNr == 0 ) {
-    fill_solid(leds + stripStart[2], stripLen[2], CRGB::Red);
-    fill_solid(leds + stripStart[7], stripLen[7], CRGB::Red);
+
+ EVERY_N_MILLIS(500) {
+    DEBUG_PRINTLN(stripNr);
+    if( stripNr == 2 ) {
+      fill_solid(leds + stripStart[0], stripLen[0], CRGB::Red);
+      fill_solid(leds + stripStart[9], stripLen[9], CRGB::Red);
+    }
+    if( stripNr == 1 ) {
+      fill_solid(leds + stripStart[1], stripLen[1], CRGB::Red);
+      fill_solid(leds + stripStart[8], stripLen[8], CRGB::Red);
+    }
+    if( stripNr == 0 ) {
+      fill_solid(leds + stripStart[2], stripLen[2], CRGB::Red);
+      fill_solid(leds + stripStart[7], stripLen[7], CRGB::Red);
+    }
+    stripNr++ ;
+    if( stripNr == 3 ) {
+      stripNr = 0;
+    }
   }
 
-  stripNr++ ;
-  if( stripNr == 3 ) {
-    stripNr = 0;
+  uint16_t bpm = 25;
+  uint8_t hue = CRGB::Red;
+  for (int i = 3; i < 7; i++)
+  {
+    moveOut(bpm, stripStart[i], stripEnd[i], hue);
   }
   LEDS.show();
-  // fadeAll(253);
+
+  fadeAll(250);
 }
 
 void radiate2()
@@ -663,7 +683,7 @@ void setTaskCallback()
   else if (strcmp(routines[_ledMode], "radiate") == 0)
   {
     taskShowPattern.setCallback(&radiate);
-    taskShowPattern.setInterval(100);
+    taskShowPattern.setInterval(10);
   }
   else if (strcmp(routines[_ledMode], "palettebeat") == 0)
   {
@@ -722,6 +742,8 @@ void checkButtonPress()
   {
     DEBUG_PRINTLN("SHORTpress detected");
     nextLedMode();
+    digitalWrite(LED_INDICATOR_PIN,HIGH);
+    digitalWrite(LED_INDICATOR_PIN,LOW);
   }
 
   checkPots();
